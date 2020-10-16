@@ -1,18 +1,47 @@
 
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace IchiranUI
 {
     public class IchiranResponse
     {
-        public IchiranWord[] Words { get; set; }
+        [JsonProperty]
+        public IchiranSentence[] Results { get; set; }
         public string SubmittedText { get; set; }
-        public string RomanizedText { get; set; }
+    }
+    public class IchiranSentence
+    {
+        [JsonProperty("rank")]
+        public int Rank { get; set; }
+        public string Romanized => string.Join(' ', Words.Select(w => w.Romanized));
+        [JsonProperty("words", ItemConverterType = typeof(WordConverter))]
+        public IchiranWord[] Words { get; set; }
     }
     public class IchiranWord
     {
+        [JsonProperty("romanized")]
+        public string Romanized { get; set; }
         public IchiranMeaning[] Alternatives { get; set; }
+    }
+    public class WordConverter : JsonConverter<IchiranWord>
+    {
+        public override IchiranWord ReadJson(JsonReader reader, Type objectType, [AllowNull] IchiranWord existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            JToken value = JToken.ReadFrom(reader);
+            IchiranWord obj = value.ToObject<IchiranWord>();
+            if (value["data"] is JArray) obj.Alternatives = value["data"]["alternative"].ToObject<IchiranMeaning[]>();
+            else obj.Alternatives = new[] {value["data"].ToObject<IchiranMeaning>()};
+            return obj;
+        }
+
+        public override void WriteJson(JsonWriter writer, [AllowNull] IchiranWord value, JsonSerializer serializer)
+        {
+            serializer.Serialize(writer, value);
+        }
     }
     public class IchiranMeaning
     {

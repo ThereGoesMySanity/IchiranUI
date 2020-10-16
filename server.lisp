@@ -13,17 +13,31 @@
     (sb-bsd-sockets:socket-listen socket 1)
     socket))
 
+(defun romanize-json (data)
+  (jsown:new-js
+    ("result" (loop for sentence in (car (ichiran:romanize* data)) collect 
+      (jsown:new-js
+        ("words" (loop for word in (nth 0 sentence) collect
+          (jsown:new-js
+            ("romanized" (nth 0 word))
+            ("data" (ichiran/dict:word-info-gloss-json (nth 1 word))))))
+        ("rank" (nth 1 sentence)))))))
+
 (defun accept-one-stream (l)
   (let ((c (sb-bsd-sockets:socket-accept l)))
     (unwind-protect
 	  (let ((stream (sb-bsd-sockets:socket-make-stream c :output t :input t)))
-        (let* ((line (read-line stream))
-               (res (ichiran/dict:simple-segment line)))
-            (loop for word in res
-                for obj = (ichiran/dict:word-info-gloss-json word)
-                for text = (jsown:to-json obj)
-                do (format stream " ~a~%" text)))
-        (sb-bsd-sockets:socket-close c)))))
+      (let* ((line (read-line stream))
+              (json (jsown:parse line)))
+        (jsown:do-json-keys (key value) json
+          (let ((result 
+              (cond
+                ((string= "segment-gloss" key)
+                  (jsown:new-js ("result" (loop for word in (ichiran/dict:simple-segment value)
+                      collect (ichiran/dict:word-info-gloss-json word)))))
+                ((string= "romanize" key) (romanize-json value)))))
+            (format stream "~a~%" (jsown:to-json result)))))
+      (sb-bsd-sockets:socket-close c)))))
 
 (defun runloop (l)
   (accept-one-stream l)
