@@ -9,15 +9,17 @@ namespace IchiranUI
 {
     public class IchiranResponse
     {
-        [JsonProperty]
-        public IchiranSentence[] Results { get; set; }
+        public int CurrentResult { get; set; }
+        public IchiranResult Result => Results?[CurrentResult];
+        [JsonProperty("result")]
+        public IchiranResult[] Results { get; set; }
         public string SubmittedText { get; set; }
     }
-    public class IchiranSentence
+    public class IchiranResult
     {
         [JsonProperty("rank")]
         public int Rank { get; set; }
-        public string Romanized => string.Join(' ', Words.Select(w => w.Romanized));
+        public string RomanizedText => string.Join(' ', Words.Select(w => w.Romanized));
         [JsonProperty("words", ItemConverterType = typeof(WordConverter))]
         public IchiranWord[] Words { get; set; }
     }
@@ -33,7 +35,7 @@ namespace IchiranUI
         {
             JToken value = JToken.ReadFrom(reader);
             IchiranWord obj = value.ToObject<IchiranWord>();
-            if (value["data"] is JArray) obj.Alternatives = value["data"]["alternative"].ToObject<IchiranMeaning[]>();
+            if (value["data"]["alternative"] != null) obj.Alternatives = value["data"]["alternative"].ToObject<IchiranMeaning[]>();
             else obj.Alternatives = new[] {value["data"].ToObject<IchiranMeaning>()};
             return obj;
         }

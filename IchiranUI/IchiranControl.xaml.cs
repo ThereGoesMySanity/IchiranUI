@@ -43,7 +43,9 @@ namespace IchiranUI
                 num = await client.ReceiveAsync(new ArraySegment<byte>(recvBuffer), SocketFlags.None);
                 sb.Append(Encoding.UTF8.GetString(recvBuffer, 0, num));
             }
-            DataContext = JsonConvert.DeserializeObject<IchiranResponse>(sb.ToString());
+            var response = JsonConvert.DeserializeObject<IchiranResponse>(sb.ToString());
+            response.SubmittedText = text;
+            DataContext = response;
         }
 
         private void InitializeComponent()

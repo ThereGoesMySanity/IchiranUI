@@ -24,7 +24,7 @@
             <Border Padding="8">
               <Border CornerRadius="8" Height="240" Width="240" Background="LightBlue" Padding="3" BorderBrush="Gray" BorderThickness="1">
                 <Grid RowDefinitions="Auto,Auto,*">
-                  <TextBlock Text="{Binding RomanizedText}" Grid.Row="0" Margin="6"/>
+                  <TextBlock Text="{Binding Romanized}" Grid.Row="0" Margin="6"/>
                   <Separator Grid.Row="1" BorderBrush="Gray" BorderThickness="1"/>
                   <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
                     <ItemsControl Classes="Meanings" Items="{Binding Alternatives}"/>
@@ -41,8 +41,8 @@
         <Setter.Value>
           <DataTemplate>
             <StackPanel Orientation="Vertical">
-              <TextBlock Text="{Binding Text}" FontWeight="Bold" FontSize="14"/>
-              <ItemsControl Classes="Glosses" Items="{Binding Glosses}" Padding="8"/>
+              <TextBlock Text="{Binding Reading}" FontWeight="Bold" FontSize="14"/>
+              <ItemsControl Classes="Glosses" Items="{Binding Glosses}" Padding="8" IsVisible="{Binding !!Glosses.Length}"/>
               <Border Padding="8 0 0 0">
                 <ItemsControl Classes="Conjugations" Items="{Binding Conjugations}" Padding="8" IsVisible="{Binding !!Conjugations.Length}"/>
               </Border>
@@ -62,7 +62,7 @@
                     <Binding Path="Index" StringFormat="{}{0}. "/>
                   </TextBlock.Text>
                 </TextBlock>
-                <Border Padding="4" Grid.Column="1">
+                <Border Padding="2" Grid.Column="1">
                   <TextBlock TextWrapping="Wrap" ToolTip.Tip="{Binding Info}">
                     <TextBlock.Text>
                       <MultiBinding StringFormat="{}{0} {1}">
@@ -119,9 +119,9 @@
           Grid.Column="1" FontSize="14"/>
     </Grid>
     <TextBlock Text="{Binding SubmittedText}" Grid.Row="1" FontWeight="Bold" FontSize="30"/>
-    <TextBlock Text="{Binding RomanizedText}" Grid.Row="2"/>
+    <TextBlock Text="{Binding Result.RomanizedText}" Grid.Row="2"/>
     <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Disabled">
-      <ItemsControl Classes="Words" Items="{Binding Words}"/>
+      <ItemsControl Classes="Words" Items="{Binding Result.Words}"/>
     </ScrollViewer>
   </Grid>
 </UserControl>
