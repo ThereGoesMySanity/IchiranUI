@@ -22,7 +22,7 @@
         <Setter.Value>
           <DataTemplate>
             <Border Padding="8">
-              <Border CornerRadius="8" Height="240" Width="240" Background="LightBlue" Padding="3" BorderBrush="Gray" BorderThickness="1">
+              <Border CornerRadius="8" Height="240" Width="240" Background="GhostWhite" Padding="3" BorderBrush="Gray" BorderThickness="1">
                 <Grid RowDefinitions="Auto,Auto,*">
                   <TextBlock Text="{Binding Romanized}" Grid.Row="0" Margin="6"/>
                   <Separator Grid.Row="1" BorderBrush="Gray" BorderThickness="1"/>
