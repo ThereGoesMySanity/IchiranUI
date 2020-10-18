@@ -33,10 +33,11 @@
           (let ((result 
               (cond
                 ((string= "segment-gloss" key)
-                  (jsown:new-js ("result" (loop for word in (ichiran/dict:simple-segment value)
-                      collect (ichiran/dict:word-info-gloss-json word)))))
-                ((string= "romanize" key) (romanize-json value)))))
-            (format stream "~a~%" (jsown:to-json result)))))
+                  (loop for sentence in value collect (jsown:new-js ("result" (loop for word in (ichiran/dict:simple-segment sentence)
+                      collect (ichiran/dict:word-info-gloss-json word))))))
+                ((string= "romanize" key) (loop for sentence in value collect (romanize-json sentence))))))
+            (loop for res in result do (format stream "~a~%" (jsown:to-json res))))))
+      (finish-output stream)
       (sb-bsd-sockets:socket-close c)))))
 
 (defun runloop (l)

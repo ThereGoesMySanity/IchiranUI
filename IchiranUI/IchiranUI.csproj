@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Avalonia\packages\Avalonia\Avalonia.csproj" />
+    <ProjectReference Include="..\..\Avalonia\src\Avalonia.Diagnostics\Avalonia.Diagnostics.csproj" />
   </ItemGroup>
   <Import Project="..\..\Avalonia\build\BuildTargets.targets" />
 

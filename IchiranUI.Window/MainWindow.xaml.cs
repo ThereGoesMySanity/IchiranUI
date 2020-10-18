@@ -9,6 +9,7 @@ namespace IchiranUI.Window
         public MainWindow()
         {
             InitializeComponent();
+            this.AttachDevTools();
         }
 
         private void InitializeComponent()

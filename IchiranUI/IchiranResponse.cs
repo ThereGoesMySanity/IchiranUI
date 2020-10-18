@@ -1,19 +1,45 @@
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace IchiranUI
 {
+    public class IchiranResponses
+    {
+        private static readonly Dictionary<char, string> punctuationReplacements = new Dictionary<char, string>()
+        {
+            ['「'] = " \"",
+            ['」'] = "\" ",
+            ['『'] = " \"",
+            ['』'] = "\" ",
+            ['（'] = " (",
+            ['）'] = ") ",
+            ['。'] = ". ",
+            ['、'] = ", ",
+            ['；'] = ";",
+            ['：'] = ":",
+            ['　'] = " ",
+            ['？'] = "? ",
+            ['！'] = "! ",
+        };
+        public IchiranResponse[] Responses { get; set; }
+        public string SubmittedText { get; set; }
+        public string RomanizedText => string.Concat(Responses.Zip(Data, (r, d) => (r, d))
+                                                    .Aggregate(SubmittedText, (s, t) => s.Replace(t.d, t.r.Result.RomanizedText))
+                                                    .Select(c => punctuationReplacements.GetValueOrDefault(c, c.ToString())));
+        public string[] Data { get; set; }
+    }
     public class IchiranResponse
     {
         public int CurrentResult { get; set; }
         public IchiranResult Result => Results?[CurrentResult];
         [JsonProperty("result")]
         public IchiranResult[] Results { get; set; }
-        public string SubmittedText { get; set; }
     }
     public class IchiranResult
     {
@@ -63,9 +89,14 @@ namespace IchiranUI
         set
         {
             _glosses = value.Select((g, i) => {g.Index = i + 1; return g;}).ToArray();
-        } }
+        }}
         [JsonProperty("conj")]
         public IchiranConjugation[] Conjugations { get; set; }
+        [JsonProperty("compound")]
+        public string[] Compound { get; set; }
+        public string CompoundParts => string.Join('+', Compound);
+        [JsonProperty("components")]
+        public IchiranMeaning[] Components { get; set; }
     }
     public class IchiranGloss
     {
