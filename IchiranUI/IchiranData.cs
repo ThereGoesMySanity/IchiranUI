@@ -10,6 +10,32 @@ using Newtonsoft.Json.Linq;
 
 namespace IchiranUI
 {
+    public struct IchiranResponses
+    {
+        private static readonly Dictionary<char, string> punctuationReplacements = new Dictionary<char, string>()
+        {
+            ['「'] = " \"",
+            ['」'] = "\" ",
+            ['『'] = " \"",
+            ['』'] = "\" ",
+            ['（'] = " (",
+            ['）'] = ") ",
+            ['。'] = ". ",
+            ['、'] = ", ",
+            ['；'] = ";",
+            ['：'] = ":",
+            ['　'] = " ",
+            ['？'] = "? ",
+            ['！'] = "! ",
+        };
+        public IchiranResponse[] Responses;
+        public string OriginalText;
+        public (string value, bool isText)[] SplitText;
+        public string RomanizedText => Responses != null? string.Concat(Responses.Zip(SplitText.Where(t => t.isText), (r, d) => (r, d))
+                                                    .Aggregate(OriginalText, (s, t) => s.Replace(t.d.value, t.r.Result.RomanizedText))
+                                                    .Select(c => punctuationReplacements.GetValueOrDefault(c, c.ToString()))) : 
+                                                    "";
+    }
     public class IchiranResponse
     {
         public int CurrentResult { get; set; }
@@ -62,6 +88,8 @@ namespace IchiranUI
         {
             _glosses = value.Select((g, i) => {g.Index = i + 1; g.Parent = this; return g;}).ToArray();
         } }
+        public IEnumerable<string> GetVocab
+          => ((this is IchiranMeaning a)? ((IchiranMeaningBase[])a.Components ?? a.Conjugations)?.SelectMany(w => w.GetVocab).DefaultIfEmpty(Text) : null) ?? new[]{Text};
     }
     public class IchiranMeaning : IchiranMeaningBase
     {
@@ -81,8 +109,8 @@ namespace IchiranUI
     }
     public class IchiranConjugation : IchiranMeaningBase
     {
-        public override string Text => base.Text ?? Reading.Substring(0, Reading.IndexOf(" 【"));
-        public override string Kana => base.Kana ?? Reading.Substring(Reading.IndexOf(" 【")+2, Reading.IndexOf("】"));
+        public override string Text => base.Text ?? (Reading.Contains('【') ? Reading.Substring(0, Reading.IndexOf(" 【")) : Reading);
+        public override string Kana => base.Kana ?? (Reading.Contains('【') ? Reading.Substring(Reading.IndexOf(" 【")+2, Reading.IndexOf("】")) : Reading);
         [JsonProperty("prop")]
         public IchiranConjProperty[] Properties { get; set; }
         [JsonProperty("readok")]

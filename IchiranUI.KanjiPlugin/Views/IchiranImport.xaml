@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="IchiranUI.KanjiPlugin.Views.IchiranImport">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Name="MainScrollView">
+            <StackPanel>
+                <Expander IsExpanded="True" BorderBrush="#666666" Padding="5" Margin="0 5 0 0">
+                    <Expander.Header>
+                        <TextBlock Text="Server settings" Classes="SettingCategoryTitle" />
+                    </Expander.Header>
+                    <StackPanel>
+                        <TextBlock Classes="LegendText" TextWrapping="Wrap">
+                          Enter server settings (IP:port) for your Ichiran server below
+                        </TextBlock>
+                        <TextBlock Classes="ErrorLabel LabelBox" TextWrapping="Wrap" Text="{Binding IchiranError}" />
+                        <Decorator Margin="0 5 0 0">
+                          <StackPanel Orientation="Horizontal">
+                            <TextBox Text="{Binding ParentMode.IpAddress, Mode=TwoWay}" Height="22" Width="220"/>
+                            <TextBlock Text=":"/>
+                            <TextBox Text="{Binding ParentMode.Port, Mode=TwoWay}" Width="90"/>
+                          </StackPanel>
+                        </Decorator>
+                    </StackPanel>
+                </Expander>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="Source:"/>
+                  <DropDown Name="Sources" Items="{Binding ParentMode.Sources}" SelectedItem="{Binding ParentMode.Source}">
+                    <DropDown.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock Text="{Binding Name}"/>
+                      </DataTemplate>
+                    </DropDown.ItemTemplate>
+                  </DropDown>
+                </StackPanel>
+                <Expander IsExpanded="True" BorderBrush="#666666" Padding="5" Margin="0 5 0 0">
+                    <Expander.Header>
+                        <TextBlock Text="Source settings" Classes="SettingCategoryTitle" />
+                    </Expander.Header>
+                    <ContentControl Content="{Binding ParentMode.Source.SettingsPage}"/>
+                </Expander>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid Grid.Row="1" Margin="0 5 0 0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button Classes="ActionButton" Content="Back" Width="100" Command="{Binding ParentMode.PreviousStepCommand}" />
+            <Button Grid.Column="2" Classes="ActionButton" Content="Next" Width="100" Command="{Binding ParentMode.NextStepCommand}" />
+        </Grid>
+    </Grid>
+</UserControl>
