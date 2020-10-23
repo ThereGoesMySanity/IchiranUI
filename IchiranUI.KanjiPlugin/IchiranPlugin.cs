@@ -7,8 +7,6 @@ namespace IchiranUI.KanjiPlugin
 {
     public class IchiranPlugin : Plugin
     {
-        public override string Image => "";
-
         public override string Description => "Ichiran connection";
 
         public override Type ViewModel => typeof(IchiranViewModel);
