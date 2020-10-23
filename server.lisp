@@ -27,7 +27,7 @@
   (let ((c (sb-bsd-sockets:socket-accept l)))
     (unwind-protect
 	  (let ((stream (sb-bsd-sockets:socket-make-stream c :output t :input t)))
-      (let* ((line (read-line stream))
+      (let* ((line (read-line stream nil ""))
               (json (jsown:parse line)))
         (jsown:do-json-keys (key value) json
           (let ((result 
