@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
@@ -9,31 +10,6 @@ using Newtonsoft.Json.Linq;
 
 namespace IchiranUI
 {
-    public class IchiranResponses
-    {
-        private static readonly Dictionary<char, string> punctuationReplacements = new Dictionary<char, string>()
-        {
-            ['「'] = " \"",
-            ['」'] = "\" ",
-            ['『'] = " \"",
-            ['』'] = "\" ",
-            ['（'] = " (",
-            ['）'] = ") ",
-            ['。'] = ". ",
-            ['、'] = ", ",
-            ['；'] = ";",
-            ['：'] = ":",
-            ['　'] = " ",
-            ['？'] = "? ",
-            ['！'] = "! ",
-        };
-        public IchiranResponse[] Responses { get; set; }
-        public string SubmittedText { get; set; }
-        public string RomanizedText => string.Concat(Responses.Zip(Data, (r, d) => (r, d))
-                                                    .Aggregate(SubmittedText, (s, t) => s.Replace(t.d, t.r.Result.RomanizedText))
-                                                    .Select(c => punctuationReplacements.GetValueOrDefault(c, c.ToString())));
-        public string[] Data { get; set; }
-    }
     public class IchiranResponse
     {
         public int CurrentResult { get; set; }
@@ -71,25 +47,28 @@ namespace IchiranUI
             serializer.Serialize(writer, value);
         }
     }
-    public class IchiranMeaning
+    public abstract class IchiranMeaningBase
     {
         [JsonProperty("reading")]
         public string Reading { get; set; }
         [JsonProperty("text")]
-        public string Text { get; set; }
+        public virtual string Text { get; set; }
         [JsonProperty("kana")]
-        public string Kana { get; set; }
-        [JsonProperty("score")]
-        public int Score { get; set; }
-        [JsonProperty("seq")]
-        public int Seq { get; set; }
+        public virtual string Kana { get; set; }
         private IchiranGloss[] _glosses;
         [JsonProperty("gloss")]
         public IchiranGloss[] Glosses { get => _glosses; 
         set
         {
-            _glosses = value.Select((g, i) => {g.Index = i + 1; return g;}).ToArray();
-        }}
+            _glosses = value.Select((g, i) => {g.Index = i + 1; g.Parent = this; return g;}).ToArray();
+        } }
+    }
+    public class IchiranMeaning : IchiranMeaningBase
+    {
+        [JsonProperty("score")]
+        public int Score { get; set; }
+        [JsonProperty("seq")]
+        public int Seq { get; set; }
         [JsonProperty("conj")]
         public IchiranConjugation[] Conjugations { get; set; }
         [JsonProperty("compound")]
@@ -97,9 +76,21 @@ namespace IchiranUI
         public string CompoundParts => string.Join('+', Compound);
         [JsonProperty("components")]
         public IchiranMeaning[] Components { get; set; }
+        [JsonProperty("suffix")]
+        public string Suffix { get; set; }
+    }
+    public class IchiranConjugation : IchiranMeaningBase
+    {
+        public override string Text => base.Text ?? Reading.Substring(0, Reading.IndexOf(" 【"));
+        public override string Kana => base.Kana ?? Reading.Substring(Reading.IndexOf(" 【")+2, Reading.IndexOf("】"));
+        [JsonProperty("prop")]
+        public IchiranConjProperty[] Properties { get; set; }
+        [JsonProperty("readok")]
+        public bool ReadOk { get; set; }
     }
     public class IchiranGloss
     {
+        public IchiranMeaningBase Parent { get; set; }
         public int Index { get; set; }
         [JsonProperty("pos")]
         public string Position { get; set; }
@@ -107,23 +98,6 @@ namespace IchiranUI
         public string Meanings { get; set; }
         [JsonProperty("info")]
         public string Info { get; set; }
-    }
-    public class IchiranConjugation
-    {
-        [JsonProperty("prop")]
-        public IchiranConjProperty[] Properties { get; set; }
-        [JsonProperty("reading")]
-        public string Reading { get; set; }
-
-        private IchiranGloss[] _glosses;
-        [JsonProperty("gloss")]
-        public IchiranGloss[] Glosses { get => _glosses; 
-        set
-        {
-            _glosses = value.Select((g, i) => {g.Index = i + 1; return g;}).ToArray();
-        } }
-        [JsonProperty("readok")]
-        public bool ReadOk { get; set; }
     }
     public class IchiranConjProperty
     {
@@ -133,5 +107,7 @@ namespace IchiranUI
         public string Type { get; set; }
         [JsonProperty("fml")]
         public bool Formal { get; set; }
+        [JsonProperty("neg")]
+        public bool Negative { get; set; }
     }
 }

@@ -12,130 +12,142 @@
     </Style> -->
     <Style Selector="ichi|IchiranControl ItemsControl.Responses">
       <Setter Property="ItemTemplate">
-        <Setter.Value>
-          <DataTemplate>
-            <ItemsControl Classes="Words" Items="{Binding Result.Words}"/>
-          </DataTemplate>
-        </Setter.Value>
+        <DataTemplate>
+          <ItemsControl Classes="Words" Items="{Binding Result.Words}"/>
+        </DataTemplate>
       </Setter>
     </Style>
     <Style Selector="ichi|IchiranControl ItemsControl.Words">
       <Setter Property="ItemsPanel">
-        <Setter.Value>
-          <ItemsPanelTemplate>
-            <WrapPanel/>
-          </ItemsPanelTemplate>
-        </Setter.Value>
+        <ItemsPanelTemplate>
+          <WrapPanel/>
+        </ItemsPanelTemplate>
       </Setter>
       <Setter Property="ItemTemplate">
-        <Setter.Value>
-          <DataTemplate>
-            <Border Padding="8">
-              <Border CornerRadius="8" Height="240" Width="240" Background="GhostWhite" Padding="3" BorderBrush="Gray" BorderThickness="1">
-                <Grid RowDefinitions="Auto,Auto,*">
-                  <TextBlock Text="{Binding Romanized}" Grid.Row="0" Margin="6"/>
-                  <Separator Grid.Row="1" BorderBrush="Gray" BorderThickness="1"/>
-                  <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
-                    <ItemsControl Classes="Meanings" Items="{Binding Alternatives}"/>
-                  </ScrollViewer>
-                </Grid>
-              </Border>
+        <DataTemplate>
+          <Border Padding="8">
+            <Border CornerRadius="8" Height="240" Width="240" Background="GhostWhite" Padding="3" BorderBrush="Gray" BorderThickness="1">
+              <Grid RowDefinitions="Auto,Auto,*">
+                <TextBlock Text="{Binding Romanized}" Grid.Row="0" Margin="6"/>
+                <Separator Grid.Row="1" BorderBrush="Gray" BorderThickness="1"/>
+                <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
+                  <ItemsControl Classes="Meanings" Items="{Binding Alternatives}"/>
+                </ScrollViewer>
+              </Grid>
             </Border>
-          </DataTemplate>
-        </Setter.Value>
+          </Border>
+        </DataTemplate>
       </Setter>
     </Style>
     <Style Selector="ichi|IchiranControl ItemsControl.Meanings">
       <Setter Property="ItemTemplate">
-        <Setter.Value>
-          <DataTemplate>
-            <StackPanel Orientation="Vertical">
-              <TextBlock Text="{Binding Reading}" FontWeight="Bold" FontSize="14"/>
-              <ItemsControl Classes="Glosses" Items="{Binding Glosses}" Padding="6" IsVisible="{Binding !!Glosses.Length}"/>
-              <Border Padding="8 0 0 0">
-                <StackPanel Orientation="Vertical">
-                  <ItemsControl Classes="Conjugations" Items="{Binding Conjugations}" Padding="8" IsVisible="{Binding Conjugations, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-                  <TextBlock IsVisible="{Binding Compound, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-                  <ItemsControl Classes="Meanings" Items="{Binding Components}" IsVisible="{Binding Compound, Converter={x:Static ObjectConverters.IsNotNull}}"/>
-                </StackPanel>
-              </Border>
-            </StackPanel>
-          </DataTemplate>
-        </Setter.Value>
+        <DataTemplate>
+          <StackPanel Orientation="Vertical">
+            <TextBlock Text="{Binding Reading}" FontWeight="Bold" FontSize="14"/>
+            <ListBox Classes="Glosses" Items="{Binding Glosses}" Padding="6" IsVisible="{Binding !!Glosses.Length}" SelectionMode="Multiple,Toggle"/>
+            <Border Padding="8 0 0 0">
+              <StackPanel Orientation="Vertical">
+                <ItemsControl Classes="Conjugations" Items="{Binding Conjugations}" Padding="8" IsVisible="{Binding Conjugations, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                <TextBlock IsVisible="{Binding Compound, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                <ItemsControl Classes="Meanings" Items="{Binding Components}" IsVisible="{Binding Compound, Converter={x:Static ObjectConverters.IsNotNull}}"/>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </DataTemplate>
       </Setter>
     </Style>
-    <Style Selector="ichi|IchiranControl ItemsControl.Glosses">
+    <Style Selector="ichi|IchiranControl ListBox.Glosses">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ItemsPresenter Name="PART_ItemsPresenter"
+                  Items="{TemplateBinding Items}"
+                  ItemsPanel="{TemplateBinding ItemsPanel}"
+                  ItemTemplate="{TemplateBinding ItemTemplate}"
+                  Margin="{TemplateBinding Padding}"
+                  VirtualizationMode="{TemplateBinding VirtualizationMode}"/>
+        </ControlTemplate>
+      </Setter>
+      <Setter Property="SelectionMode" Value="Multiple,Toggle"/>
+      <Setter Property="SelectedItems" Value="{Binding $parent[ichi:IchiranControl].DataContext.SelectedDefinitions}"/>
       <Setter Property="ItemTemplate">
-        <Setter.Value>
-          <DataTemplate>
-            <StackPanel Orientation="Vertical">
-              <Grid ColumnDefinitions="Auto,*">
-                <TextBlock Grid.Column="0" FontSize="14">
+        <DataTemplate>
+          <StackPanel Orientation="Vertical">
+            <Grid ColumnDefinitions="Auto,*">
+              <TextBlock Grid.Column="0" FontSize="14">
+                <TextBlock.Text>
+                  <Binding Path="Index" StringFormat="{}{0}. "/>
+                </TextBlock.Text>
+              </TextBlock>
+              <Border Padding="2" Grid.Column="1">
+                <TextBlock TextWrapping="Wrap" ToolTip.Tip="{Binding Info}">
                   <TextBlock.Text>
-                    <Binding Path="Index" StringFormat="{}{0}. "/>
+                    <MultiBinding StringFormat="{}{0} {1}">
+                      <Binding Path="Position"/>
+                      <Binding Path="Meanings"/>
+                    </MultiBinding>
                   </TextBlock.Text>
                 </TextBlock>
-                <Border Padding="2" Grid.Column="1">
-                  <TextBlock TextWrapping="Wrap" ToolTip.Tip="{Binding Info}">
-                    <TextBlock.Text>
-                      <MultiBinding StringFormat="{}{0} {1}">
-                        <Binding Path="Position"/>
-                        <Binding Path="Meanings"/>
-                      </MultiBinding>
-                    </TextBlock.Text>
-                  </TextBlock>
-                </Border>
-              </Grid>
-            </StackPanel>
-          </DataTemplate>
-        </Setter.Value>
+              </Border>
+            </Grid>
+          </StackPanel>
+        </DataTemplate>
       </Setter>
     </Style>
     <Style Selector="ItemsControl.Conjugations">
       <Setter Property="ItemTemplate">
-        <Setter.Value>
-          <DataTemplate>
-            <StackPanel Orientation="Vertical">
-              <ItemsControl Classes="ConjProps" Items="{Binding Properties}"/>
-              <TextBlock FontSize="14" FontWeight="Bold" Text="{Binding Reading}"/>
-              <ItemsControl Classes="Glosses" Items="{Binding Glosses}"/>
-            </StackPanel>
-          </DataTemplate>
-        </Setter.Value>
+        <DataTemplate>
+          <StackPanel Orientation="Vertical">
+            <ItemsControl Classes="ConjProps" Items="{Binding Properties}"/>
+            <TextBlock FontSize="14" FontWeight="Bold" Text="{Binding Reading}"/>
+            <ListBox Classes="Glosses" Items="{Binding Glosses}" SelectionMode="Multiple,Toggle"/>
+          </StackPanel>
+        </DataTemplate>
       </Setter>
     </Style>
     <Style Selector="ItemsControl.ConjProps">
       <Setter Property="ItemTemplate">
-        <Setter.Value>
-          <DataTemplate>
-            <StackPanel Orientation="Vertical">
-              <TextBlock FontSize="14">
-                <TextBlock.Text>
-                  <MultiBinding StringFormat="{}[{0}] {1}">
-                    <Binding Path="Position"/>
-                    <Binding Path="Type"/>
-                  </MultiBinding>
-                </TextBlock.Text>
-              </TextBlock>
-            </StackPanel>
-          </DataTemplate>
-        </Setter.Value>
+        <DataTemplate>
+          <StackPanel Orientation="Vertical">
+            <TextBlock FontSize="14">
+              <TextBlock.Text>
+                <MultiBinding StringFormat="{}[{0}] {1}">
+                  <Binding Path="Position"/>
+                  <Binding Path="Type"/>
+                </MultiBinding>
+              </TextBlock.Text>
+            </TextBlock>
+          </StackPanel>
+        </DataTemplate>
       </Setter>
     </Style>
 
   </UserControl.Styles>
-  <Grid RowDefinitions="30,Auto,Auto,*">
+  <Grid RowDefinitions="30,Auto,Auto,*,30">
     <Grid ColumnDefinitions="*,Auto">
-      <TextBox Name="Text" Grid.Column="0" FontSize="14"/>
-      <Button Click="OnClicked" Content="Submit" 
-          IsEnabled="{Binding #Text.Text, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+      <TextBox Text="{Binding Text}" Name="SubmitText" Grid.Column="0" FontSize="14"/>
+      <Button Command="{Binding $parent[ichi:IchiranControl].SendRequest}" Content="Submit" 
+          IsEnabled="{Binding #SubmitText.Text, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
           Grid.Column="1" FontSize="14"/>
     </Grid>
     <TextBlock Text="{Binding SubmittedText}" Grid.Row="1" FontWeight="Bold" FontSize="30"/>
     <TextBlock Text="{Binding RomanizedText}" Grid.Row="2"/>
     <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Disabled">
-      <ItemsControl Classes="Responses" Items="{Binding Responses}"/>
-
+      <ItemsControl Name="Responses" Classes="Responses" Items="{Binding Responses, Mode=TwoWay}"/>
     </ScrollViewer>
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                Spacing="8" Grid.Row="4" IsVisible="{Binding !!SelectedDefinitions.Count}">
+      <StackPanel.Styles>
+        <Style Selector="TextBlock">
+          <Setter Property="FontSize" Value="14"/>
+        </Style>
+      </StackPanel.Styles>
+      <TextBlock Grid.Column="1" VerticalAlignment="Center">
+        <TextBlock.Text>
+          <Binding Path="SelectedDefinitions.Count" StringFormat="{}{0} definitions selected"/>
+        </TextBlock.Text>
+      </TextBlock>
+      <Button Grid.Column="2" Command="{Binding Clear}" Content="Clear"/>
+      <Button Grid.Column="3" Command="{Binding AddSelectedDefinitions}" Content="Add to reviews"/>
+    </StackPanel>
   </Grid>
 </UserControl>
