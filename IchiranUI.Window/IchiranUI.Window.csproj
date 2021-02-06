@@ -13,9 +13,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IchiranUI\IchiranUI.csproj" />
-    <ProjectReference Include="..\..\Avalonia\packages\Avalonia\Avalonia.csproj" />
-    <ProjectReference Include="..\..\Avalonia\src\Avalonia.Desktop\Avalonia.Desktop.csproj" />
   </ItemGroup>
-    <Import Project="..\..\Avalonia\build\BuildTargets.targets" />
-
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="0.10.0"/>
+    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.0"/>
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.0"/>
+  </ItemGroup>
 </Project>

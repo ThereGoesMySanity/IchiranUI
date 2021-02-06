@@ -12,12 +12,11 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Houhou-SRS2\Kanji.Interface\Kanji.Interface.csproj"/>
-    <ProjectReference Include="..\..\Avalonia\packages\Avalonia\Avalonia.csproj" />
-    <ProjectReference Include="..\..\Avalonia\src\Avalonia.Diagnostics\Avalonia.Diagnostics.csproj" />
-    <ProjectReference Include="..\..\Avalonia\src\Avalonia.Controls.DataGrid\Avalonia.Controls.DataGrid.csproj" />
-    <ProjectReference Include="..\..\AvaloniaBehaviors\src\Avalonia.Xaml.Behaviors\Avalonia.Xaml.Behaviors.csproj" />
-    <ProjectReference Include="..\..\Avalonia\src\Avalonia.Desktop\Avalonia.Desktop.csproj" />
     <ProjectReference Include="..\IchiranUI\IchiranUI.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="0.10.0"/>
+    <PackageReference Include="Avalonia.Xaml.Behaviors" Version="0.10.0"/>
   </ItemGroup>
   <Target Name="AfterBuildCopy" AfterTargets="Build">
     <Copy SourceFiles="bin/Debug/netcoreapp3.1/IchiranUI.KanjiPlugin.dll"
@@ -25,5 +24,4 @@
     <Copy SourceFiles="../IchiranUI/bin/Debug/netstandard2.1/IchiranUI.dll"
           DestinationFiles="/usr/share/Houhou SRS/Debug/Plugins/IchiranUI.dll"/>
   </Target>
-  <Import Project="..\..\Avalonia\build\BuildTargets.targets" />
 </Project>

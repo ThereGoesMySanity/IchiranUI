@@ -14,12 +14,6 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Avalonia" Version="0.10.0"/>
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\Avalonia\packages\Avalonia\Avalonia.csproj" />
-    <ProjectReference Include="..\..\Avalonia\src\Avalonia.Diagnostics\Avalonia.Diagnostics.csproj" />
-  </ItemGroup>
-  <Import Project="..\..\Avalonia\build\BuildTargets.targets" />
-
 </Project>
