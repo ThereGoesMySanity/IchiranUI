@@ -57,7 +57,7 @@ namespace IchiranUI
         }
         public async Task SendRequest()
         {
-            var responses = await IchiranApi.SendRequest(Text);
+            var responses = await IchiranApi.SendRequest("localhost", 13535, Text);
             Responses = responses.Responses;
             SubmittedText = responses.OriginalText;
             Data = responses.SplitText.Where(t => t.isText).Select(t => t.value).ToArray();

@@ -1,6 +1,7 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using Kanji.Interface.Utilities;
 
@@ -21,7 +22,7 @@ namespace IchiranUI.KanjiPlugin.Sources
                 }
             }
         }
-        public abstract void Start();
+        public abstract Task Start();
         public abstract void End();
         public abstract Control SettingsPage { get; }
         public abstract Control ControlsPage { get; }
@@ -30,6 +31,14 @@ namespace IchiranUI.KanjiPlugin.Sources
         public Source()
         {
             Sentences = new ObservableCollection<string>();
+        }
+
+        public void AddSentences(string str)
+        {
+            foreach (string s in str.Split(new[]{'\n', '.', '。'}))
+            {
+                Sentences.Add(s);
+            }
         }
     }
 }

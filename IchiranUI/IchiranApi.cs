@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -18,7 +17,7 @@ namespace IchiranUI
         private static readonly Regex separatorRegex = new Regex($"[{japaneseTextRegex}]+|[^{japaneseTextRegex}]+");
         private static readonly Regex textRegex = new Regex($"[{japaneseTextRegex}]");
 
-        public static async Task<IchiranResponses> SendRequest(string text)
+        public static async Task<IchiranResponses> SendRequest(string ipAddress, int port, string text)
         {
             byte[] recvBuffer = new byte[1024];
             string rawText = text.Trim();
@@ -29,9 +28,10 @@ namespace IchiranUI
                 RequestType = "romanize",
                 Data = data,
             };
-            IPHostEntry ipHost = Dns.GetHostEntry(Dns.GetHostName());
-            IPAddress ipAddr = IPAddress.Parse("127.0.0.1");
-            IPEndPoint endpoint = new IPEndPoint(ipAddr, 13535);
+            IPHostEntry host = Dns.GetHostEntry(ipAddress);
+            IPAddress ipAddr = host.AddressList.Where(i => i.AddressFamily == AddressFamily.InterNetwork).FirstOrDefault();
+            IPEndPoint endpoint = new IPEndPoint(ipAddr, port);
+
             Socket client = new Socket(ipAddr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             await client.ConnectAsync(endpoint);
             var buffer = Encoding.UTF8.GetBytes($"{new JObject(request.Json).ToString(Formatting.None)}\n");

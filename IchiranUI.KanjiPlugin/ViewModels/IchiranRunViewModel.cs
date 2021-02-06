@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,44 +25,52 @@ namespace IchiranUI.KanjiPlugin.ViewModels
             }
         }
 
+        private IchiranResponses _responses;
+        
+        public IchiranResponses Responses
+        {
+            get => _responses;
+            set
+            {
+                if (value != _responses)
+                {
+                    _responses = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
+
         public IchiranRunViewModel(ImportModeViewModel parentMode) : base(parentMode)
         {
         }
 
-        public override void OnEnterStep()
+        public override async Task OnEnterStep()
         {
-            ParentMode.Source.Start();
+            await ParentMode.Source.Start();
             ParentMode.PropertyChanged += OnPropertyChanged;
             if (ParentMode.SelectedSentence != null)
-                RequestApi();
-
+                await RequestApi();
         }
         
-        private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private async void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "SelectedSentence")
             {
-                RequestApi();
+                await RequestApi();
             }
         }
 
-        private void RequestApi()
+        private async Task RequestApi()
         {
-            IchiranApi.SendRequest(ParentMode.SelectedSentence).ContinueWith(ApiResponse, null);
-        }
-
-        private async void ApiResponse(Task<IchiranResponses> task, object state)
-        {
-            var responses = await task;
+            Responses = await IchiranApi.SendRequest(ParentMode.IpAddress, int.Parse(ParentMode.Port), ParentMode.SelectedSentence);
             VocabFilter filter = new VocabFilter
             {
-                Vocab = responses.Responses.SelectMany(r => r.Result.Words.SelectMany(w =>
+                Vocab = Responses.Responses.SelectMany(r => r.Result.Words.SelectMany(w =>
                                 w.Alternatives.SelectMany(a => a.GetVocab))).ToArray(),
             };
             VocabListVm = new VocabListViewModel(filter);
             VocabListVm.KanjiNavigated += (obj, e) => NavigationActor.Instance.NavigateToKanji(e.Character);
         }
-
 
         public override bool OnNextStep()
         {

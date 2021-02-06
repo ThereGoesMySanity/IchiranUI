@@ -8,11 +8,6 @@ namespace IchiranUI.KanjiPlugin.ViewModels
         {
         }
 
-        public override void OnEnterStep()
-        {
-            base.OnEnterStep();
-        }
-
         public override bool OnNextStep()
         {
             return base.OnNextStep();

@@ -1,5 +1,5 @@
-using System.Linq;
 using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 
@@ -15,19 +15,17 @@ namespace IchiranUI.KanjiPlugin.Sources
             Watermark = "Enter sentence here",
         };
 
-        public override void Start()
+        public override Task Start()
         {
             (ControlsPage as TextBox).GetObservable(TextBox.TextProperty).Subscribe(TextUpdated);
+            return Task.CompletedTask;
         }
 
         private void TextUpdated(string str)
         {
             this.Sentences.Clear();
             if (str == null) return;
-            foreach (string s in str.Split(new[]{'\n', '.', '。'}))
-            {
-                Sentences.Add(s);
-            }
+            AddSentences(str);
         }
 
         public override void End()
