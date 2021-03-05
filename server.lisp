@@ -1,7 +1,7 @@
 (require 'sb-bsd-sockets)
 (load "ichiran/ichiran.asd")
 (ql:quickload "ichiran")
-(ichiran/conn:with-db nil (ichiran/mnt:add-errata))
+;; (ichiran/conn:with-db nil (ichiran/mnt:add-errata))
 (ichiran/dict:init-suffixes t)
 (defparameter *localhost-address* '(127 0 0 1))
 
