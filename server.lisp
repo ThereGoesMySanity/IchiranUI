@@ -4,6 +4,22 @@
 ;; (ichiran/conn:with-db nil (ichiran/mnt:add-errata))
 (ichiran/dict:init-suffixes t)
 (defparameter *localhost-address* '(127 0 0 1))
+(defvar *sem* (bt:make-semaphore :count 48))
+
+(defun send-seq-query (seqs)
+  (if (= (length seqs) 0) 
+    nil
+    (ichiran/conn:with-db nil (postmodern:query (format nil "with recursive reconj(seq) as (
+	values ~{(~a)~^,~}
+	union
+	select c.from from conjugation c join reconj r on r.seq=c.seq
+)
+select r.seq, k.text, k.best_kanji from reconj r left join conjugation c on c.seq=r.seq join kana_text k on k.seq=r.seq where c is null and k.ord=0;" seqs)))))
+
+(defun get-conjs (wis)
+  (let ((result (mapcan #'(lambda (x) (if (numberp x) (list x) x)) 
+      (mapcar #'ichiran/dict:word-info-seq wis))))
+    (remove-duplicates (alexandria:flatten result))))
 
 (defun make-listen-socket ()
   (let ((socket (make-instance 'sb-bsd-sockets:inet-socket
@@ -25,20 +41,34 @@
 
 (defun accept-one-stream (l)
   (let ((c (sb-bsd-sockets:socket-accept l)))
-    (unwind-protect
-	  (let ((stream (sb-bsd-sockets:socket-make-stream c :output t :input t)))
-      (let* ((line (read-line stream nil ""))
-              (json (jsown:parse line)))
-        (jsown:do-json-keys (key value) json
-          (let ((result 
-              (cond
-                ((string= "segment-gloss" key)
-                  (loop for sentence in value collect (jsown:new-js ("result" (loop for word in (ichiran/dict:simple-segment sentence)
-                      collect (ichiran/dict:word-info-gloss-json word))))))
-                ((string= "romanize" key) (loop for sentence in value collect (romanize-json sentence))))))
-            (loop for res in result do (format stream "~a~%" (jsown:to-json res))))))
-      (finish-output stream)
-      (sb-bsd-sockets:socket-close c)))))
+    (bt:wait-on-semaphore *sem*)
+    (bt:make-thread (lambda ()
+      (unwind-protect
+        (let ((stream (sb-bsd-sockets:socket-make-stream c :output t :input t)))
+          (let* ((line (read-line stream nil ""))
+                  (json (jsown:parse line)))
+            (jsown:do-json-keys (key value) json
+              (let ((result 
+                  (cond
+                    ((string= "segment-root" key)
+                      (mapcar
+                        #'(lambda (sentence) (jsown:new-js ("result"
+                          (mapcar 
+                            #'(lambda (list) (jsown:new-js 
+                              ("seq" (nth 0 list))
+                              ("kana" (nth 1 list))
+                              ("kanji" (nth 2 list))))
+                            (send-seq-query (get-conjs (ichiran/dict:simple-segment sentence)))))))
+                        value))
+                    ((string= "segment-gloss" key)
+                      (mapcar
+                        #'(lambda (sentence) (jsown:new-js ("result" (mapcar #'ichiran/dict:word-info-gloss-json (ichiran/dict:simple-segment sentence))))) 
+                        value))
+                    ((string= "romanize" key) (mapcar #'romanize-json value)))))
+                (loop for res in result do (format stream "~a~%" (jsown:to-json res))))))
+          (bt:signal-semaphore *sem*)
+          (finish-output stream)
+          (sb-bsd-sockets:socket-close c)))))))
 
 (defun runloop (l)
   (accept-one-stream l)
