@@ -25,9 +25,9 @@ namespace IchiranUI.KanjiPlugin.ViewModels
             }
         }
 
-        private IchiranResponses _responses;
+        private IchiranResponses<IchiranRomanizeResponse> _responses;
         
-        public IchiranResponses Responses
+        public IchiranResponses<IchiranRomanizeResponse> Responses
         {
             get => _responses;
             set
@@ -62,11 +62,11 @@ namespace IchiranUI.KanjiPlugin.ViewModels
 
         private async Task RequestApi()
         {
-            Responses = await IchiranApi.SendRequest(ParentMode.IpAddress, int.Parse(ParentMode.Port), ParentMode.SelectedSentence);
+            Responses = await IchiranApi.SendRequest<IchiranRomanizeResponse>(ParentMode.IpAddress, int.Parse(ParentMode.Port), ParentMode.SelectedSentence);
             VocabFilter filter = new VocabFilter
             {
                 Vocab = Responses.Responses.SelectMany(r => r.Result.Words.SelectMany(w =>
-                                w.Alternatives.SelectMany(a => a.GetVocab))).ToArray(),
+                                w.Alternatives.Alternatives.SelectMany(a => a.GetVocab))).ToArray(),
             };
             VocabListVm = new VocabListViewModel(filter);
             VocabListVm.KanjiNavigated += (obj, e) => NavigationActor.Instance.NavigateToKanji(e.Character);

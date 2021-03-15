@@ -25,7 +25,7 @@ namespace IchiranUI
     public class IchiranControlViewModel
     {
         public string Text { get; set; }
-        public IchiranResponse[] Responses { get; set; }
+        public IchiranRomanizeResponse[] Responses { get; set; }
         public string SubmittedText { get; set; }
         public string[] Data { get; set; }
         public ObservableCollection<IchiranGloss> SelectedDefinitions { get; set; } = new ObservableCollection<IchiranGloss>();
@@ -57,7 +57,7 @@ namespace IchiranUI
         }
         public async Task SendRequest()
         {
-            var responses = await IchiranApi.SendRequest("localhost", 13535, Text);
+            var responses = await IchiranApi.SendRequest<IchiranRomanizeResponse>("localhost", 13535, Text);
             Responses = responses.Responses;
             SubmittedText = responses.OriginalText;
             Data = responses.SplitText.Where(t => t.isText).Select(t => t.value).ToArray();

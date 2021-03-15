@@ -5,8 +5,10 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace IchiranUI
 {
@@ -17,7 +19,33 @@ namespace IchiranUI
         private static readonly Regex separatorRegex = new Regex($"[{japaneseTextRegex}]+|[^{japaneseTextRegex}]+");
         private static readonly Regex textRegex = new Regex($"[{japaneseTextRegex}]");
 
-        public static async Task<IchiranResponses> SendRequest(string ipAddress, int port, string text)
+        private static readonly Dictionary<Type, string> requestTypes = new Dictionary<Type, string>{
+            [typeof(IchiranSegmentResponse)] = "segment-gloss",
+            [typeof(IchiranRomanizeResponse)] = "romanize",
+            [typeof(IchiranSegmentRootResponse)] = "segment-root",
+        };
+        private readonly string host;
+        private readonly int port;
+
+        SemaphoreSlim maxConnections = new SemaphoreSlim(initialCount: 48);
+
+        public IchiranApi(string host, int port)
+        {
+            this.host = host;
+            this.port = port;
+        }
+
+        public async Task<IchiranResponses<T>> SendRequest<T>(string text)
+        {
+            await maxConnections.WaitAsync();
+            try {
+                return await SendRequest<T>(host, port, text);
+            } finally {
+                maxConnections.Release();
+            }
+        }
+
+        public static async Task<IchiranResponses<T>> SendRequest<T>(string ipAddress, int port, string text)
         {
             byte[] recvBuffer = new byte[1024];
             string rawText = text.Trim();
@@ -25,7 +53,7 @@ namespace IchiranUI
             string[] data = splitText.Where(t => t.text).Select(t => t.value).ToArray();
             var request = new IchiranRequest
             {
-                RequestType = "romanize",
+                RequestType = requestTypes[typeof(T)],
                 Data = data,
             };
             IPHostEntry host = Dns.GetHostEntry(ipAddress);
@@ -44,9 +72,9 @@ namespace IchiranUI
                 num = await client.ReceiveAsync(new ArraySegment<byte>(recvBuffer), SocketFlags.None);
                 sb.Append(Encoding.UTF8.GetString(recvBuffer, 0, num));
             }
-            return new IchiranResponses
+            return new IchiranResponses<T>
             {
-                Responses = sb.ToString().Split('\n').Select(JsonConvert.DeserializeObject<IchiranResponse>).Where(r => r != null).ToArray(),
+                Responses = sb.ToString().Split('\n').Select(JsonConvert.DeserializeObject<T>).Where(r => r != null).ToArray(),
                 SplitText = splitText,
                 OriginalText = rawText,
             };
