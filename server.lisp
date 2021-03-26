@@ -6,24 +6,27 @@
 (defparameter *localhost-address* '(127 0 0 1))
 (defvar *sem* (bt:make-semaphore :count 48))
 
-(defun send-seq-query (seqs)
-  (if (= (length seqs) 0) 
+(defun sqlify (str) (if str (format nil "\'~a\'" str) "NULL"))
+
+(defun send-seq-query (words)
+  (if (= (length words) 0) 
     nil
-    (ichiran/conn:with-db nil (postmodern:query (format nil "with recursive reconj(src, seq) as (
-	values ~{(~a, ~a)~^,~}
-  union
-	select r.seq, c.from from conjugation c join reconj r on r.seq=c.seq
-	join entry e on e.seq=r.seq where not e.root_p
-)
-select * from reconj r 
-join kana_text k on k.seq=r.seq
-join entry e on e.seq=r.seq
-where e.root_p;" seqs)))))
+    (ichiran/conn:with-db nil (postmodern:query 
+      (format nil "
+select coalesce(c.from, v.seq) as seq, coalesce(csr.source_text, v.kana) as kana, coalesce(csr_kanji.source_text, v.kanji) as kanji
+from (values ~{~a~^,~})
+		as v(seq, kana, kanji)
+left join conjugation c on v.seq=c.seq
+left join conj_source_reading csr on c.id=csr.conj_id and v.kana=csr.text
+left join conj_source_reading csr_kanji on c.id=csr_kanji.conj_id and v.kanji=csr_kanji.text;"
+        (mapcar #'(lambda (x) (format nil "(~a,~a,~a)" 
+            (ichiran/dict:word-info-seq x) 
+            (sqlify (ichiran/dict:word-info-kana x)) 
+            (sqlify (if (eql (ichiran/dict:word-info-type x) :kanji) (ichiran/dict:word-info-text x) nil))))
+          words))))))
 
 (defun get-conjs (wis)
-  (let ((result (mapcan #'(lambda (x) (if (numberp x) (list x) x)) 
-      (mapcar #'ichiran/dict:word-info-seq wis))))
-    (remove-duplicates (alexandria:flatten result))))
+    (remove-duplicates (mapcan #'(lambda (x) (or (ichiran/dict:word-info-components x) (list x))) wis)))
 
 (defun make-listen-socket ()
   (let ((socket (make-instance 'sb-bsd-sockets:inet-socket
@@ -52,12 +55,12 @@ where e.root_p;" seqs)))))
           (let* ((line (read-line stream nil ""))
                   (json (jsown:parse line)))
             (jsown:do-json-keys (key value) json
-              (let ((result 
+              (let ((result
                   (cond
                     ((string= "segment-root" key)
                       (mapcar
                         #'(lambda (sentence) (jsown:new-js ("result"
-                          (mapcar 
+                          (mapcar
                             #'(lambda (list) (jsown:new-js 
                               ("seq" (nth 0 list))
                               ("kana" (nth 1 list))
