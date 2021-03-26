@@ -9,12 +9,16 @@
 (defun send-seq-query (seqs)
   (if (= (length seqs) 0) 
     nil
-    (ichiran/conn:with-db nil (postmodern:query (format nil "with recursive reconj(seq) as (
-	values ~{(~a)~^,~}
-	union
-	select c.from from conjugation c join reconj r on r.seq=c.seq
+    (ichiran/conn:with-db nil (postmodern:query (format nil "with recursive reconj(src, seq) as (
+	values ~{(~a, ~a)~^,~}
+  union
+	select r.seq, c.from from conjugation c join reconj r on r.seq=c.seq
+	join entry e on e.seq=r.seq where not e.root_p
 )
-select r.seq, k.text, k.best_kanji from reconj r left join conjugation c on c.seq=r.seq join kana_text k on k.seq=r.seq where c is null and k.ord=0;" seqs)))))
+select * from reconj r 
+join kana_text k on k.seq=r.seq
+join entry e on e.seq=r.seq
+where e.root_p;" seqs)))))
 
 (defun get-conjs (wis)
   (let ((result (mapcan #'(lambda (x) (if (numberp x) (list x) x)) 
