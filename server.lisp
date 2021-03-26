@@ -25,8 +25,15 @@ left join conj_source_reading csr_kanji on c.id=csr_kanji.conj_id and v.kanji=cs
             (sqlify (if (eql (ichiran/dict:word-info-type x) :kanji) (ichiran/dict:word-info-text x) nil))))
           words))))))
 
+(defun word-info-recursive (wis)
+  (mapcan #'(lambda (x)
+    (if (ichiran/dict:word-info-components x)
+      (word-info-recursive (ichiran/dict:word-info-components x))
+      (list x))) wis))
+
 (defun get-conjs (wis)
-    (remove-duplicates (mapcan #'(lambda (x) (or (ichiran/dict:word-info-components x) (list x))) wis)))
+    (remove-duplicates (word-info-recursive wis)))
+
 
 (defun make-listen-socket ()
   (let ((socket (make-instance 'sb-bsd-sockets:inet-socket
