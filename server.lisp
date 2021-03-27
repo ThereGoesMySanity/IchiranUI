@@ -13,12 +13,21 @@
     nil
     (ichiran/conn:with-db nil (postmodern:query 
       (format nil "
-select coalesce(c.from, v.seq) as seq, coalesce(csr.source_text, v.kana) as kana, coalesce(csr_kanji.source_text, v.kanji) as kanji
+select distinct on (v)
+	coalesce(kjt.seq, kt.seq, v.seq) as seq, 
+	case when e.root_p then v.kana else coalesce(kjt.best_kana, kt.text) end as kana,
+	case when e.root_p then v.kanji else kjt.text end as kanji
 from (values ~{~a~^,~})
 		as v(seq, kana, kanji)
 left join conjugation c on v.seq=c.seq
-left join conj_source_reading csr on c.id=csr.conj_id and v.kana=csr.text
-left join conj_source_reading csr_kanji on c.id=csr_kanji.conj_id and v.kanji=csr_kanji.text;"
+join entry e on e.seq=v.seq
+left join entry ev on ev.seq=c.via
+left join entry ef on ef.seq=c.from
+left join conj_source_reading csr on c.id=csr.conj_id and csr.text=coalesce(v.kanji, v.kana)
+left join kanji_text kjt on kjt.seq=case when ev.root_p then ev.seq when ef.root_p then ef.seq end
+	and kjt.text=csr.source_text
+left join kana_text kt on kt.seq=case when ev.root_p then ev.seq when ef.root_p then ef.seq end
+	and kt.text=csr.source_text;"
         (mapcar #'(lambda (x) (format nil "(~a,~a,~a)" 
             (ichiran/dict:word-info-seq x) 
             (sqlify (ichiran/dict:word-info-kana x)) 
