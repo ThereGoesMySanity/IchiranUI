@@ -32,7 +32,7 @@ left join conj_source_reading csr_kanji on c.id=csr_kanji.conj_id and v.kanji=cs
       (list x))) wis))
 
 (defun get-conjs (wis)
-    (remove-duplicates (word-info-recursive wis)))
+    (remove-duplicates (remove-if-not #'ichiran/dict:word-info-seq (word-info-recursive wis))))
 
 
 (defun make-listen-socket ()
