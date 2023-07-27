@@ -14,7 +14,7 @@
     (ichiran/conn:with-db nil (postmodern:query 
       (format nil "
 select distinct on (v)
-	coalesce(kjt.seq, kt.seq, v.seq) as seq, 
+	case when e.root_p then v.seq else coalesce(kjt.seq, kt.seq, v.seq) end as seq,
 	case when e.root_p then v.kana else coalesce(kjt.best_kana, kt.text) end as kana,
 	case when e.root_p then v.kanji else kjt.text end as kanji
 from (values ~{~a~^,~})
